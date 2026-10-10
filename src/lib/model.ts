@@ -62,6 +62,8 @@ export interface AppointmentData {
   calendarLink?: string;
   /** Only admins and members see it (pwa-kit roles); always written, `false` included. */
   private?: boolean;
+  /** Written only as `false`, when its reminders are turned off; absent means on. */
+  remind?: false;
   createdAt: number;
   by: string;
 }

@@ -57,5 +57,7 @@ export function appointmentDoc(a: AppointmentInput, by: string, createdAt: numbe
   if (a.calendarLink && /^https:\/\//.test(a.calendarLink)) out.calendarLink = a.calendarLink;
   // Written every time: an appointment without the flag is hidden from helpers and kids.
   out.private = a.private === true;
+  // Reminders are on unless turned off, so only the off state is written.
+  if (a.remind === false) out.remind = false;
   return out;
 }

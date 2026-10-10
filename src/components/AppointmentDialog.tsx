@@ -5,7 +5,7 @@ import type { Contact } from '@huishouden/pwa-kit/contacts';
 import { AddToCalendar, CalendarFind, LinkedEvent } from '@huishouden/pwa-kit/react/calendar';
 import { appointmentEntry } from '../lib/agenda';
 import { PrivateCheckbox } from '@huishouden/pwa-kit/react/contacts';
-import { Dialog, Field, deleteButton, ghostButton, inputClass, primaryButton } from '@huishouden/pwa-kit/react/ui';
+import { Checkbox, Dialog, Field, deleteButton, ghostButton, inputClass, primaryButton } from '@huishouden/pwa-kit/react/ui';
 import { addDays, fromLocalInput, toLocalInput } from '@huishouden/pwa-kit/time';
 import type { Appointment } from '../lib/model';
 import { LIMITS } from '../lib/model';
@@ -34,6 +34,7 @@ export function AppointmentDialog({ appointment, now, contacts, calendarAvailabl
   const [location, setLocation] = useState(appointment?.location ?? '');
   const [notes, setNotes] = useState(appointment?.notes ?? '');
   const [contactId, setContactId] = useState(appointment?.contactId ?? '');
+  const [remind, setRemind] = useState(appointment?.remind !== false);
   const [isPrivate, setPrivate] = useState(appointment?.private === true);
   const [event, setEvent] = useState(appointment?.calendarEventId || appointment?.calendarLink ? { id: appointment.calendarEventId, link: appointment.calendarLink } : null);
   const at = fromLocalInput(`${date}T${time}`);
@@ -43,7 +44,7 @@ export function AppointmentDialog({ appointment, now, contacts, calendarAvailabl
 
   const save = () => {
     if (!valid || at === null) return;
-    onSave({ title, at, location, notes, contactId: contactId || undefined, calendarEventId: event?.id, calendarLink: event?.link, private: canMarkPrivate && isPrivate });
+    onSave({ title, at, location, notes, contactId: contactId || undefined, calendarEventId: event?.id, calendarLink: event?.link, private: canMarkPrivate && isPrivate, remind });
     onClose();
   };
 
@@ -131,6 +132,14 @@ export function AppointmentDialog({ appointment, now, contacts, calendarAvailabl
         <Field label={t('appointmentDialog.notes')}>
           <textarea className={`${inputClass} min-h-20`} maxLength={LIMITS.notes} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </Field>
+        <div>
+          <Checkbox checked={remind} onChange={setRemind}>
+            {t('appointmentDialog.remind')}
+          </Checkbox>
+          <p className="ml-9 text-sm text-muted">
+            {t('appointmentDialog.remindHint')}
+          </p>
+        </div>
         {event && <LinkedEvent link={event.link} onUnlink={() => setEvent(null)} />}
         {canMarkPrivate && <PrivateCheckbox checked={isPrivate} onChange={setPrivate} />}
         <button type="submit" hidden />

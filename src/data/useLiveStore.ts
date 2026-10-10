@@ -9,9 +9,11 @@ import { defaultChecklistDocs } from '../lib/checklist';
 import { DAY } from '@huishouden/pwa-kit/time';
 import { readError } from '@huishouden/pwa-kit/feedback';
 import { localizeAgenda, removeAgenda, replaceAgenda, syncAgenda } from '@huishouden/pwa-kit/agenda';
+import { localizeReminders, syncReminders } from '@huishouden/pwa-kit/reminders';
 import { localizeTodos, syncTodos } from '@huishouden/pwa-kit/todos';
-import { agendaItems, appointmentAgenda, appointmentRef } from '../lib/agenda';
+import { agendaItems, appointmentAgenda, appointmentRef, tabUrl } from '../lib/agenda';
 import { todoItems } from '../lib/todos';
+import { appointmentReminders } from '../lib/reminders';
 import { db } from './firebase';
 import { COLLECTIONS, createActions, type Backend } from './actions';
 import type { BabyData, BabyStore } from './types';
@@ -24,6 +26,9 @@ const HISTORY_DAYS = 14;
 const publish = (p: Promise<unknown>) => void p.catch((e) => console.warn("Couldn't update the household agenda", e));
 /** The to-do list is the same kind of copy. */
 const publishTodos = (p: Promise<unknown>) => void p.catch((e) => console.warn("Couldn't update the household to-do list", e));
+
+/** How long after an appointment change the reminders follow, so a run of edits is one sync. */
+const REMINDER_DELAY = 1500;
 
 /** How long after a checklist change the to-do list follows, so a run of ticks is one sync. */
 const TODO_DELAY = 3000;
@@ -146,6 +151,21 @@ export function useLiveStore(householdId: string, me: string, members: string[],
     );
     return () => clearTimeout(timer);
   }, [fromServer.checklists, checklists, householdId, me, restricted]);
+
+  // Reminders for the appointments (the day before and 2 hours before): on open once the server has
+  // answered, so a stale cache never cancels any, then shortly after each add, edit or delete.
+  // Every language's words go along, so each device is notified in its own.
+  useEffect(() => {
+    // Helpers' and kids' devices schedule none: the kit lets only admins and members attach the source that cancels a moved or deleted appointment's reminders, and rewriting without it would strip theirs.
+    if (restricted || !fromServer.profile || !fromServer.appointments) return;
+    const timer = setTimeout(() => {
+      const now = Date.now();
+      localizeReminders(() => appointmentReminders(appointments, profile, now, tabUrl(location.origin, 'appointments')))
+        .then((items) => syncReminders(db, householdId, 'baby', items, me, now, {}))
+        .catch((e) => console.warn("Couldn't schedule reminders", e));
+    }, REMINDER_DELAY);
+    return () => clearTimeout(timer);
+  }, [fromServer.profile, fromServer.appointments, appointments, profile, householdId, me, restricted]);
 
   const actions = useMemo(() => {
     const report = (p: Promise<unknown>) => void p.catch((e) => errorRef.current(readError(e, t('error.save'))));

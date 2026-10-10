@@ -42,10 +42,12 @@ interface Props {
   /** Shown above the content: the sample-data banner. */
   banner?: ReactNode;
   initialTab?: TabId;
+  /** The signed-in household, for the notifications switch. */
+  householdId?: string;
 }
 
 /** Everything inside the frame once there is data to show (live or sample). */
-export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, notify, clearToast, banner, initialTab }: Props) {
+export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, notify, clearToast, banner, initialTab, householdId }: Props) {
   const t = useT();
   const { now } = useClock();
   const [tab, setTab] = useState<TabId>(() => initialTab ?? tabFromHash() ?? 'home');
@@ -94,7 +96,7 @@ export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, no
   let content: ReactNode;
   if (!store.ready) content = <p className="p-2 text-lg text-muted">{t('app.loading')}</p>;
   else if (tab === 'appointments')
-    content = <Appointments store={store} calendarAvailable={calendar} onAdd={() => setAppointment('new')} onEdit={openAppointment} onImport={importEvents} />;
+    content = <Appointments store={store} live={householdId && user?.email ? { householdId, email: user.email.toLowerCase() } : undefined} calendarAvailable={calendar} onAdd={() => setAppointment('new')} onEdit={openAppointment} onImport={importEvents} />;
   else if (tab === 'checklists') content = <Checklists store={store} notify={notify} onAddContact={(role) => setContact({ contact: null, role: ROLE_NAMES[role] })} />;
   else if (tab === 'contacts')
     content = <Contacts store={store} notify={notify} onAdd={() => setContact({ contact: null })} onEdit={(c) => setContact({ contact: c })} />;

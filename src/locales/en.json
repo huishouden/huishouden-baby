@@ -249,5 +249,20 @@
   "template.paperwork.preregister": "Pre-register at the hospital",
   "template.paperwork.leave": "Plan parental leave with work",
   "template.paperwork.insurance": "Add the baby to health insurance after the birth",
-  "template.paperwork.certificate": "Apply for a birth certificate and Social Security number"
+  "template.paperwork.certificate": "Apply for a birth certificate and Social Security number",
+  "appointmentDialog.remind": "Remind me",
+  "appointmentDialog.remindHint": "A notification the day before and 2 hours before, for everyone with notifications on.",
+  "push.offText": "Get appointment reminders on this device: the day before and 2 hours before each visit.",
+  "push.onText": "On. This device gets appointment reminders.",
+  "push.mute": "Mute appointment reminders for me",
+  "push.muteHint": "Only for you, on all your devices. Everyone else still gets them.",
+  "push.title": "Notifications on this device",
+  "push.turnOn": "Turn on",
+  "push.sampleNote": "Sign in to turn on notifications.",
+  "reminder.dayBefore": "Tomorrow: {title}",
+  "reminder.soon": "In 2 hours: {title}",
+  "reminder.when": "{time}",
+  "reminder.whenWhere": "{time} at {place}",
+  "reminder.whenWho": "{time} for {name}",
+  "reminder.whenWhoWhere": "{time} for {name} at {place}"
 }
