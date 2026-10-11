@@ -71,6 +71,18 @@ export interface Appointment extends AppointmentData {
   id: string;
 }
 
+/** babyContractions/{id}: one contraction; `end` is absent while it is still going. */
+export interface ContractionData {
+  start: number;
+  end?: number;
+  by: string;
+  createdAt: number;
+  updatedAt?: number;
+}
+export interface Contraction extends ContractionData {
+  id: string;
+}
+
 export const LIMITS = { name: 60, note: 500, itemText: 200, title: 120, location: 200, notes: 500 } as const;
 
 /** The editable part of an event; `by`/`createdAt` stay with the original logger. */

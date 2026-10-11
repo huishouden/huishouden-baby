@@ -78,3 +78,24 @@ test('an edited appointment keeps its author and creation time', () => {
   h.actions.saveAppointment(a.id, { title: 'Check-up, moved', at: a.at + 3600_000 });
   expect(h.read().appointments.find((x) => x.id === a.id)).toMatchObject({ title: 'Check-up, moved', by: a.by, createdAt: a.createdAt, private: false });
 });
+
+describe('the contraction timer', () => {
+  test('start records who and when; stop sets only the end, so a helper may stop another’s', () => {
+    const h = harness('sam@example.com');
+    const id = h.actions.startContraction();
+    expect(h.read().contractions.find((c) => c.id === id)).toEqual({ id, start: DEMO_NOW, by: 'sam@example.com', createdAt: DEMO_NOW });
+    h.actions.stopContraction(id);
+    expect(h.writes.at(-1)).toEqual([{ col: 'contractions', id, data: { end: DEMO_NOW, updatedAt: DEMO_NOW }, merge: true }]);
+    expect(h.read().contractions.find((c) => c.id === id)).toMatchObject({ end: DEMO_NOW, by: 'sam@example.com' });
+  });
+
+  test('delete and restore put a mistaken tap back as it was', () => {
+    const h = harness();
+    const id = h.actions.startContraction();
+    const c = h.read().contractions.find((x) => x.id === id)!;
+    h.actions.deleteContraction(id);
+    expect(h.read().contractions.some((x) => x.id === id)).toBe(false);
+    h.actions.restoreContraction(c);
+    expect(h.read().contractions.find((x) => x.id === id)).toEqual(c);
+  });
+});

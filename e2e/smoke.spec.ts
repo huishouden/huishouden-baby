@@ -91,3 +91,18 @@ test('done and not done read differently: an outlined Mark done, then a done row
 });
 
 test('follows the suite theme: dark on a dark device, readable', ({ page }) => expectThemeConsistent(page, { path: './' }));
+
+test('the contraction timer starts, stops and removes a mistaken tap', async ({ page }) => {
+  await expectCleanLoad(page);
+  await page.getByRole('button', { name: /Contractions/ }).first().click();
+  await expect(page.getByRole('note')).toContainText('Call your provider or L&D right away');
+  await expect(page.getByTestId('status')).toBeVisible();
+  const before = await page.getByRole('button', { name: /^Delete the contraction/ }).count();
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await expect(page.getByTestId('elapsed')).toBeVisible();
+  await page.getByRole('button', { name: 'Stop', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Delete the contraction/ })).toHaveCount(before + 1);
+  await page.getByRole('button', { name: 'Start', exact: true }).click();
+  await page.getByRole('button', { name: /Mistaken tap/ }).click();
+  await expect(page.getByRole('button', { name: /^Delete the contraction/ })).toHaveCount(before + 1);
+});

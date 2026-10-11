@@ -16,6 +16,7 @@ export const COLLECTIONS = {
   events: 'babyEvents',
   checklists: 'babyChecklists',
   appointments: 'babyAppointments',
+  contractions: 'babyContractions',
 } as const satisfies Partial<Record<keyof BabyData, string>>;
 export type DataKey = keyof typeof COLLECTIONS;
 
@@ -69,6 +70,21 @@ export function createActions(backend: Backend, read: () => BabyData, me: string
     },
     deleteAppointment: (id) => del('appointments', id),
     restoreAppointment: (a) => put('appointments', a.id, withoutId(a)),
+    startContraction: () => {
+      track('start contraction');
+      const now = Math.round(clock());
+      const id = backend.newId('contractions');
+      put('contractions', id, { start: now, by: me, createdAt: now });
+      return id;
+    },
+    // Only the end changes, so stopping someone else's contraction (a helper may) never rewrites it.
+    stopContraction: (id) => {
+      track('stop contraction');
+      const now = Math.round(clock());
+      backend.write([{ col: 'contractions', id, data: { end: now, updatedAt: now }, merge: true }]);
+    },
+    deleteContraction: (id) => del('contractions', id),
+    restoreContraction: (c) => put('contractions', c.id, withoutId(c)),
     saveContact: (id, input) => backend.contacts.save(id, input),
     deleteContact: (id) => {
       const c = read().contacts.find((x) => x.id === id);
