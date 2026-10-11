@@ -122,7 +122,7 @@ export function useLiveStore(householdId: string, me: string, members: string[],
         fail(() => t('error.loadAppointments')),
       ),
       // Kids have no access to the contraction timer (the rules refuse the read).
-      ...(role === 'kid'
+      ...(role == null || role === 'kid'
         ? []
         : [
             onSnapshot(

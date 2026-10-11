@@ -92,6 +92,11 @@ test('done and not done read differently: an outlined Mark done, then a done row
 
 test('follows the suite theme: dark on a dark device, readable', ({ page }) => expectThemeConsistent(page, { path: './' }));
 
+test('a kid has no contraction timer', async ({ page }) => {
+  await expectCleanLoad(page, './?as=kid');
+  await expect(page.getByRole('button', { name: /Contractions|Timer/ })).toHaveCount(0);
+});
+
 test('the contraction timer starts, stops and removes a mistaken tap', async ({ page }) => {
   await expectCleanLoad(page);
   await page.getByRole('button', { name: /Contractions/ }).first().click();

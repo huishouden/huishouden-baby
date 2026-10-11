@@ -146,6 +146,23 @@ test.describe('as a helper', () => {
     await page.reload();
     await expect(page.getByRole('button', { name: /^Fell asleep/ })).toBeVisible({ timeout: 20_000 });
   });
+
+  test('a helper stops a contraction a member started, and can’t delete it', async ({ browser }) => {
+    const admin = await hh.open(browser, 'admin');
+    await admin.getByRole('button', { name: 'Contractions', exact: true }).first().click();
+    await admin.getByRole('button', { name: /^Start/ }).click();
+    await expect(admin.getByTestId('elapsed')).toBeVisible();
+
+    const page = await hh.open(browser, 'helper');
+    await page.getByRole('button', { name: 'Contractions', exact: true }).first().click();
+    await page.getByRole('button', { name: /^Stop/ }).click({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: /^Start/ })).toBeVisible();
+    await page.waitForTimeout(3000);
+    await page.reload();
+    await page.getByRole('button', { name: 'Contractions', exact: true }).first().click();
+    await expect(page.getByRole('button', { name: /^Start/ })).toBeVisible({ timeout: 20_000 });
+    await expect(page.getByRole('button', { name: /^Delete the contraction/ })).toHaveCount(0);
+  });
 });
 
 // The household to-do list (pwa-kit STANDARD.md "To-dos"): a checklist item Baby publishes is

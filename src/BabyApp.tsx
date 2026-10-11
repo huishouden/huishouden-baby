@@ -90,7 +90,7 @@ export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, no
   const tabs: Tab[] = [
     { id: 'home', label: born ? t('tab.log') : t('tab.overview'), icon: born ? NotebookPen : BabyIcon },
     // Kids have no access to the contraction timer.
-    ...(store.role === 'kid' ? [] : [{ id: 'contractions', label: t('tab.contractions'), short: t('tab.contractionsShort'), icon: Timer }]),
+    ...(store.role == null || store.role === 'kid' ? [] : [{ id: 'contractions', label: t('tab.contractions'), short: t('tab.contractionsShort'), icon: Timer }]),
     { id: 'appointments', label: t('tab.appointments'), short: t('tab.appointmentsShort'), icon: CalendarDays },
     { id: 'checklists', label: t('tab.checklists'), icon: ListChecks },
     { id: 'contacts', label: t('tab.contacts'), icon: ContactIcon },
@@ -98,7 +98,7 @@ export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, no
 
   let content: ReactNode;
   if (!store.ready) content = <p className="p-2 text-lg text-muted">{t('app.loading')}</p>;
-  else if (tab === 'contractions' && store.role !== 'kid') content = <Contractions store={store} notify={notify} />;
+  else if (tab === 'contractions' && store.role != null && store.role !== 'kid') content = <Contractions store={store} notify={notify} />;
   else if (tab === 'appointments')
     content = <Appointments store={store} live={householdId && user?.email ? { householdId, email: user.email.toLowerCase() } : undefined} calendarAvailable={calendar} onAdd={() => setAppointment('new')} onEdit={openAppointment} onImport={importEvents} />;
   else if (tab === 'checklists') content = <Checklists store={store} notify={notify} onAddContact={(role) => setContact({ contact: null, role: ROLE_NAMES[role] })} />;
@@ -114,7 +114,7 @@ export function BabyApp({ store, user, onSignIn, onSignOut, signingIn, toast, no
         onAddAppointment={() => setAppointment('new')}
         onEditAppointment={openAppointment}
         onOpen={setTab}
-        contractions={store.role !== 'kid'}
+        contractions={store.role != null && store.role !== 'kid'}
         notify={notify}
       />
     );

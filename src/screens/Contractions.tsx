@@ -7,6 +7,8 @@ import { cardClass, iconButton, overline, secondaryButton } from '@huishouden/pw
 import type { BabyStore } from '../data/types';
 import { clock, durationOf, intervalBefore, providerContact, running, sessions, summarize, type Status, type Trend } from '../lib/contractions';
 import type { Contraction } from '../lib/model';
+import { can } from '@huishouden/pwa-kit/roles';
+import { RoleNote } from '@huishouden/pwa-kit/react/roles';
 import { mayChange } from '../lib/roles';
 import { useT } from '../i18n';
 
@@ -56,7 +58,8 @@ export function Contractions({ store, notify }: Props) {
   const last = [...contractions].sort((a, b) => b.start - a.start).find((c) => c.id !== currentId);
 
   const toggle = () => {
-    if (current) store.actions.stopContraction(current.id);
+    // Stops every open one: two phones tapping Start at once leave a stray that would never end.
+    if (current) for (const c of contractions) if (c.end == null) store.actions.stopContraction(c.id);
     else store.actions.startContraction();
   };
   const remove = (c: Contraction) => {
@@ -75,7 +78,7 @@ export function Contractions({ store, notify }: Props) {
         <button
           type="button"
           onClick={toggle}
-          className={`flex min-h-40 w-full flex-col items-center justify-center gap-1 rounded-2xl px-4 py-6 text-3xl font-semibold transition-colors duration-150 ${current ? 'bg-attention-fill text-white' : 'bg-primary text-on-primary hover:bg-primary-hover'}`}
+          className={`flex min-h-40 w-full flex-col items-center justify-center gap-1 rounded-2xl px-4 py-6 text-3xl font-semibold transition-colors duration-150 ${current ? 'border-2 border-attention-fill bg-attention-tint text-attention' : 'bg-primary text-on-primary hover:bg-primary-hover'}`}
         >
           <span className="flex items-center gap-3">
             {current ? <Square size={32} aria-hidden="true" /> : <Play size={32} aria-hidden="true" />}
@@ -114,6 +117,8 @@ export function Contractions({ store, notify }: Props) {
           </a>
         )}
       </section>
+
+      {!can(store.role, 'edit-others') && contractions.some((c) => c.by !== store.me) && <RoleNote action="edit-others" />}
 
       <section className="space-y-4" aria-label={t('contractions.history')}>
         {history.length === 0 && <p className="text-lg text-muted">{t('contractions.none')}</p>}
