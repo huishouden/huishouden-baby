@@ -17,10 +17,13 @@ import type { BabyStore } from '../data/types';
 import { auth } from '../data/firebase';
 import { PrivateMark } from '@huishouden/pwa-kit/react/contacts';
 import { mayChange } from '../lib/roles';
+import { DeviceNotifications, type LiveNotifications } from '../components/Notifications';
 import { useT } from '../i18n';
 
-export function Appointments({ store, calendarAvailable, onAdd, onEdit, onImport }: {
+export function Appointments({ store, live, calendarAvailable, onAdd, onEdit, onImport }: {
   store: BabyStore;
+  /** Signed in: the household and address the notifications switch acts for. */
+  live?: LiveNotifications;
   calendarAvailable: boolean;
   onAdd: () => void;
   onEdit: (a: Appointment) => void;
@@ -89,6 +92,8 @@ export function Appointments({ store, calendarAvailable, onAdd, onEdit, onImport
           )}
         </section>
       )}
+
+      <DeviceNotifications live={live} />
 
       {importing && (
         <CalendarImportDialog

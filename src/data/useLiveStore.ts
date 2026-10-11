@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { commitOps, setDoc, writeBatch } from '@huishouden/pwa-kit/firestore';
 import { householdContacts, markUnflaggedOpen, watchContacts, type Contact } from '@huishouden/pwa-kit/contacts';
@@ -9,9 +9,11 @@ import { defaultChecklistDocs } from '../lib/checklist';
 import { DAY } from '@huishouden/pwa-kit/time';
 import { readError } from '@huishouden/pwa-kit/feedback';
 import { localizeAgenda, removeAgenda, replaceAgenda, syncAgenda } from '@huishouden/pwa-kit/agenda';
+import { localizeReminders, replaceReminders, syncReminders } from '@huishouden/pwa-kit/reminders';
 import { localizeTodos, syncTodos } from '@huishouden/pwa-kit/todos';
-import { agendaItems, appointmentAgenda, appointmentRef } from '../lib/agenda';
+import { agendaItems, appointmentAgenda, appointmentRef, tabUrl } from '../lib/agenda';
 import { todoItems } from '../lib/todos';
+import { appointmentReminders, reminderRefs } from '../lib/reminders';
 import { db } from './firebase';
 import { COLLECTIONS, createActions, type Backend } from './actions';
 import type { BabyData, BabyStore } from './types';
@@ -147,6 +149,40 @@ export function useLiveStore(householdId: string, me: string, members: string[],
     return () => clearTimeout(timer);
   }, [fromServer.checklists, checklists, householdId, me, restricted]);
 
+  // Reminders for the appointments (the day before and 2 hours before). On open, once the server has
+  // answered so a stale cache never cancels any; after that, with each appointment saved or deleted
+  // (see `scheduleReminders` below), so a change to its time, privacy or switch is not left to a timer.
+  // Every language's words go along, so each device is notified in its own.
+  const scheduleReminders = useCallback(
+    (appointments: Appointment[], profile: BabyProfile | null, changed?: string[]) => {
+      const now = Date.now();
+      const url = tabUrl(location.origin, 'appointments');
+      const warn = (e: unknown) => console.warn("Couldn't schedule reminders", e);
+      if (!restricted) {
+        localizeReminders(() => appointmentReminders(appointments, profile, now, url))
+          .then((items) => syncReminders(db, householdId, 'baby', items, me, now, {}))
+          .catch(warn);
+        return;
+      }
+      // A helper's or kid's device touches only the appointments it just saved or deleted, by ref and
+      // without a source (the kit allows that only to admins and members), so it never rewrites the
+      // reminders an admin or member scheduled for others.
+      if (!changed?.length) return;
+      localizeReminders(() => appointmentReminders(appointments.filter((a) => changed.includes(a.id)), profile, now, url, false))
+        .then((items) =>
+          Promise.all(changed.flatMap(reminderRefs).map((ref) => replaceReminders(db, householdId, ref, items.filter((r) => r.ref === ref), me, now, { restricted }))),
+        )
+        .catch(warn);
+    },
+    [householdId, me, restricted],
+  );
+  const remindersFor = useRef<string | null>(null);
+  useEffect(() => {
+    if (restricted || !fromServer.profile || !fromServer.appointments || remindersFor.current === householdId) return;
+    remindersFor.current = householdId;
+    scheduleReminders(appointments, profile);
+  }, [restricted, fromServer.profile, fromServer.appointments, appointments, profile, householdId, scheduleReminders]);
+
   const actions = useMemo(() => {
     const report = (p: Promise<unknown>) => void p.catch((e) => errorRef.current(readError(e, t('error.save'))));
     const publishAppointment = (a: Appointment) =>
@@ -159,6 +195,12 @@ export function useLiveStore(householdId: string, me: string, members: string[],
       newId: (col) => doc(collection(db, base, COLLECTIONS[col])).id,
       write: (ops) => {
         report(commitOps(db, base, ops, (col) => COLLECTIONS[col]));
+        // The reminders follow too, from the appointments as they will stand once these writes land.
+        if (ops.some((op) => op.col === 'appointments')) {
+          const next = new Map(current.current.appointments.map((x) => [x.id, x]));
+          for (const op of ops) if (op.col === 'appointments') op.data ? next.set(op.id, { id: op.id, ...(op.data as Omit<Appointment, 'id'>) }) : next.delete(op.id);
+          scheduleReminders([...next.values()], current.current.profile, ops.filter((op) => op.col === 'appointments').map((op) => op.id));
+        }
         // The household agenda follows each appointment saved, restored or deleted.
         for (const op of ops) {
           if (op.col !== 'appointments') continue;
@@ -178,7 +220,7 @@ export function useLiveStore(householdId: string, me: string, members: string[],
       contacts: householdContacts(db, householdId, APP, me, report),
     };
     return createActions(backend, () => current.current, me, () => Date.now());
-  }, [base, householdId, me, restricted]);
+  }, [base, householdId, me, restricted, scheduleReminders]);
 
   return {
     data,

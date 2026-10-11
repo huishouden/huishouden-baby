@@ -96,7 +96,7 @@ function LiveApp({ household, user, ...frame }: FrameProps & { household: Househ
   const read = useCallback(() => Date.now(), []);
   return (
     <ClockProvider read={read}>
-      <BabyApp store={store} user={user} {...frame} toast={toast} notify={notify} clearToast={clear} />
+      <BabyApp store={store} user={user} householdId={household.id} {...frame} toast={toast} notify={notify} clearToast={clear} />
     </ClockProvider>
   );
 }

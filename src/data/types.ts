@@ -20,6 +20,8 @@ export interface AppointmentInput {
   calendarEventId?: string;
   calendarLink?: string;
   private?: boolean;
+  /** Reminders the day before and 2 hours before; on unless `false`. */
+  remind?: boolean;
 }
 
 /** Writes return immediately (Firestore queues them offline); failures arrive through `onError`. */

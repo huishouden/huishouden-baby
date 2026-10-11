@@ -249,5 +249,20 @@
   "template.paperwork.preregister": "Hacer el registro previo en el hospital",
   "template.paperwork.leave": "Planear la licencia parental con el trabajo",
   "template.paperwork.insurance": "Agregar al bebé al seguro médico después del nacimiento",
-  "template.paperwork.certificate": "Tramitar el acta de nacimiento y el número de identificación del bebé"
+  "template.paperwork.certificate": "Tramitar el acta de nacimiento y el número de identificación del bebé",
+  "appointmentDialog.remind": "Recordármelo",
+  "appointmentDialog.remindHint": "Una notificación el día anterior y 2 horas antes, para todos los que tengan las notificaciones activadas.",
+  "push.offText": "Recibe recordatorios de citas en este dispositivo: el día anterior y 2 horas antes de cada cita.",
+  "push.onText": "Activado. Este dispositivo recibe recordatorios de citas.",
+  "push.mute": "Silenciar los recordatorios de citas para mí",
+  "push.muteHint": "Solo para ti, en todos tus dispositivos. Los demás los siguen recibiendo.",
+  "push.title": "Notificaciones en este dispositivo",
+  "push.turnOn": "Activar",
+  "push.sampleNote": "Inicia sesión para activar las notificaciones.",
+  "reminder.dayBefore": "Mañana: {title}",
+  "reminder.soon": "En 2 horas: {title}",
+  "reminder.when": "{time}",
+  "reminder.whenWhere": "{time} en {place}",
+  "reminder.whenWho": "{time} para {name}",
+  "reminder.whenWhoWhere": "{time} para {name} en {place}"
 }

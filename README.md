@@ -1,7 +1,7 @@
 # Huishouden Baby
 
 A wall-tablet app for a household expecting a baby. Before the birth it shows the due-date countdown,
-upcoming appointments, checklists (hospital bag, car seat, nursery, paperwork) and the care team's
+upcoming appointments (with reminders the day before and 2 hours before), checklists (hospital bag, car seat, nursery, paperwork) and the care team's
 contacts (pediatrician, midwife, hospital), each one tap from a call or a map. After the birth the
 main screen becomes a one-tap log of feeds, sleep, diapers and pumping, readable from across the room:
 when the baby last ate, how long they have been asleep or awake, and today's totals. Every entry shows
@@ -46,6 +46,18 @@ Baby publishes its dates to the household agenda (`households/{householdId}/agen
 (timed, with its place and the baby's name) and, until the birth, the due date (all day). Saving or
 deleting an appointment or the baby's details updates the agenda at once; opening the app reconciles
 it (`src/lib/agenda.ts`). Links open the Appointments tab (`#appointments`) or the main screen.
+
+Each appointment also schedules two push reminders (`households/{householdId}/reminders`,
+`@huishouden/pwa-kit/reminders`, `src/lib/reminders.ts`): the day before and 2 hours before, in
+every language so each device is notified in its own. "Remind me" in the appointment dialog is on
+by default; turning it off stores `remind: false` on the appointment, and the reminders go. Each
+reminder names the appointment as its `source`, so moving or deleting it cancels them unsent. A
+private appointment's reminders are private. They are rescheduled the moment an appointment is saved or deleted. An admin's or member's device
+syncs all of them on open; a helper's or kid's device only replaces the reminders of the appointment
+it just saved or deleted, without the `source` (the kit lets only admins and members attach it), and
+never rewrites those scheduled for others. Each person turns on notifications per device, once
+for the whole suite, from the card under the appointments (`VITE_VAPID_PUBLIC_KEY`, the push key
+shared by the suite); "Mute appointment reminders for me" silences Baby for them alone.
 
 Checklist items still to do go on the household to-do list instead (`households/{householdId}/todos`,
 `@huishouden/pwa-kit/todos`, `src/lib/todos.ts`), so the portal's To-do tab can tick them off (Done,

@@ -10,3 +10,11 @@ describe('appointment documents', () => {
     expect(appointmentDoc({ title: 'Checkup', at: 1 }, 'h@example.com', 1).by).toBe('h@example.com');
   });
 });
+
+describe('an appointment document and its reminder switch', () => {
+  test('is written only when reminders are off', () => {
+    expect(appointmentDoc({ title: 'Check', at: 5, remind: false }, 'a@example.com', 1).remind).toBe(false);
+    expect('remind' in appointmentDoc({ title: 'Check', at: 5, remind: true }, 'a@example.com', 1)).toBe(false);
+    expect('remind' in appointmentDoc({ title: 'Check', at: 5 }, 'a@example.com', 1)).toBe(false);
+  });
+});

@@ -20,6 +20,7 @@ export default defineConfig({
     pwaApp({
       // Baby's path on the suite's one site (pwa-kit docs/one-site.md).
       base: '/baby/',
+      push: true,
       name: 'Huishouden Baby',
       shortName: 'Baby',
       description: "Looking after the little one, together",

@@ -249,5 +249,20 @@
   "template.paperwork.preregister": "Je vooraf inschrijven bij het ziekenhuis",
   "template.paperwork.leave": "Ouderschapsverlof plannen met je werk",
   "template.paperwork.insurance": "De baby na de geboorte aanmelden bij de zorgverzekering",
-  "template.paperwork.certificate": "Geboorteaangifte doen bij de gemeente"
+  "template.paperwork.certificate": "Geboorteaangifte doen bij de gemeente",
+  "appointmentDialog.remind": "Herinner me",
+  "appointmentDialog.remindHint": "Een melding de dag ervoor en 2 uur van tevoren, voor iedereen met meldingen aan.",
+  "push.offText": "Krijg afspraakherinneringen op dit apparaat: de dag ervoor en 2 uur voor elke afspraak.",
+  "push.onText": "Aan. Dit apparaat krijgt afspraakherinneringen.",
+  "push.mute": "Afspraakherinneringen voor mij dempen",
+  "push.muteHint": "Alleen voor jou, op al je apparaten. De anderen krijgen ze nog wel.",
+  "push.title": "Meldingen op dit apparaat",
+  "push.turnOn": "Aanzetten",
+  "push.sampleNote": "Log in om meldingen aan te zetten.",
+  "reminder.dayBefore": "Morgen: {title}",
+  "reminder.soon": "Over 2 uur: {title}",
+  "reminder.when": "{time}",
+  "reminder.whenWhere": "{time} bij {place}",
+  "reminder.whenWho": "{time} voor {name}",
+  "reminder.whenWhoWhere": "{time} voor {name} bij {place}"
 }
