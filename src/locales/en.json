@@ -147,7 +147,7 @@
   "amount.logBottle": "Log bottle",
   "amount.logPump": "Log pumping",
   "amount.label": "Amount in ml",
-  "amount.hint": "Leave empty if you don't know.",
+  "amount.hint": "Leave it empty if you don't know.",
   "eventDialog.feed": "Edit feed",
   "eventDialog.sleep": "Edit sleep",
   "eventDialog.diaper": "Edit diaper",
