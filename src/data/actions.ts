@@ -35,7 +35,13 @@ export function createActions(backend: Backend, read: () => BabyData, me: string
   return {
     saveProfile: (p) => {
       track('save baby profile');
-      backend.saveProfile(profileDoc(p, me, clock()));
+      // Editing the baby's details keeps the instructions note.
+      backend.saveProfile(profileDoc({ ...p, contractionNote: p.contractionNote ?? read().profile?.contractionNote }, me, clock()));
+    },
+    saveContractionNote: (note) => {
+      track('save contraction note');
+      const { name, dueDate, birthDate } = read().profile ?? {};
+      backend.saveProfile(profileDoc({ name, dueDate, birthDate, contractionNote: note }, me, clock()));
     },
     logEvent: (f) => {
       track('log entry', { kind: f.kind });

@@ -15,6 +15,8 @@ export function profileDoc(p: ProfileInput, by: string, now: number): BabyProfil
   if (name) out.name = name;
   if (p.dueDate && /^\d{4}-\d{2}-\d{2}$/.test(p.dueDate)) out.dueDate = p.dueDate;
   if (p.birthDate && /^\d{4}-\d{2}-\d{2}$/.test(p.birthDate)) out.birthDate = p.birthDate;
+  const note = trimmed(p.contractionNote, LIMITS.contractionNote);
+  if (note) out.contractionNote = note;
   return out;
 }
 

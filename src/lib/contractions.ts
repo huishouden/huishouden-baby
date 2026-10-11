@@ -61,7 +61,43 @@ export type Status =
   | 'irregular'
   /** Close and long, but not yet held for the hour. */
   | 'building'
-  | 'match';
+  | 'match'
+  /** The household's own instructions from L&D are met (the note). */
+  | 'call'
+  /** Before 37 weeks: four or more in the hour. */
+  | 'preCall'
+  /** Before 37 weeks, fewer than that. */
+  | 'preKeep';
+
+/** What changes the status: how far along the pregnancy is, and the household's own threshold. */
+export interface Rules {
+  /** Before 37 completed weeks (needs the due date). 5-1-1 is for term; earlier, any regular pattern means call. */
+  preterm?: boolean;
+  /** From the note: call at this many contractions in an hour. */
+  noteCount?: number;
+  /** From the note: call when they are this many minutes apart or closer. */
+  noteMinutes?: number;
+}
+
+/** Before 37 weeks this many contractions in the hour reads as regular. */
+export const PRETERM_COUNT = 4;
+
+/** Reads "call if 6 in an hour" and "call when 5 minutes apart" out of the household's note. */
+export function parseNote(note: string | undefined): Pick<Rules, 'noteCount' | 'noteMinutes'> {
+  if (!note) return {};
+  const out: Pick<Rules, 'noteCount' | 'noteMinutes'> = {};
+  const count = /(\d{1,2})\s*(?:contractions?\s*|weeën\s*|contracciones\s*)?(?:in|per|\/|en|binnen|por)\s*(?:an?\s*|1\s*|one\s*|een\s*|una\s*|1\s*)?(?:hour|hr|h|uur|hora)\b/i.exec(note);
+  if (count) out.noteCount = Number(count[1]);
+  const apart = /(\d{1,2})\s*(?:min(?:utes?|uten)?|m)\s*(?:apart|or less apart|auseinander|uit elkaar|de separación)|every\s*(\d{1,2})\s*min/i.exec(note);
+  if (apart) out.noteMinutes = Number(apart[1] ?? apart[2]);
+  return out;
+}
+
+/** Completed weeks and days of pregnancy from the due date's remaining days (40 weeks = 280 days). */
+export function gestation(daysToDue: number): { weeks: number; days: number } | null {
+  const d = 280 - daysToDue;
+  return d >= 0 && d <= 300 ? { weeks: Math.floor(d / 7), days: d % 7 } : null;
+}
 
 export interface Summary {
   count: number;
@@ -78,7 +114,7 @@ const mean = (xs: number[]): number | null => (xs.length ? xs.reduce((a, b) => a
 const CHANGE = 0.15;
 
 /** The last hour: count, averages, trend and the 5-1-1 status. */
-export function summarize(list: Contraction[], now: number): Summary {
+export function summarize(list: Contraction[], now: number, rules: Rules = {}): Summary {
   const w = list.filter((c) => c.start >= now - WINDOW && c.start <= now).sort(byStart);
   const durations = w.filter((c) => !isRunning(c)).map((c) => durationOf(c, now));
   const intervals = w.slice(1).map((c, i) => c.start - w[i].start);
@@ -87,6 +123,10 @@ export function summarize(list: Contraction[], now: number): Summary {
   const base = { count: w.length, avgDuration, avgInterval };
   if (w.length === 0) return { ...base, trend: 'unknown', status: 'none' };
   const trend = trendOf(durations, intervals);
+  // The household's own instructions from L&D come before any general guide.
+  const noteMet = (rules.noteCount != null && w.length >= rules.noteCount) || (rules.noteMinutes != null && w.length >= 3 && avgInterval != null && avgInterval <= rules.noteMinutes * MIN);
+  if (noteMet) return { ...base, trend, status: 'call' };
+  if (rules.preterm) return { ...base, trend, status: w.length >= PRETERM_COUNT ? 'preCall' : 'preKeep' };
   if (w.length < 3 || avgInterval == null || avgDuration == null) return { ...base, trend, status: 'few' };
   const closeAndLong = avgInterval <= MAX_INTERVAL && avgDuration >= MIN_DURATION;
   if (!closeAndLong) return { ...base, trend, status: 'irregular' };
@@ -120,9 +160,13 @@ export function clock(ms: number): string {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
 
-/** The household contact to call first: an OB or midwife, else a hospital, that has a phone number. */
+const LABOR = /\b(labou?r\s*(&|and)\s*delivery|l\s*&\s*d|l&d|ob\s*triage|triage|kraamafdeling|bevalling|sala de partos|parto)\b/iu;
+
+/** The household contact to call first: labor and delivery or OB triage, else an OB or midwife, else a hospital, that has a phone number. */
 export function providerContact(contacts: Contact[]): Contact | undefined {
   const withPhone = contacts.filter((c) => c.phone?.trim());
+  const labor = withPhone.find((c) => LABOR.test(`${c.role ?? ''} ${c.name}`));
+  if (labor) return labor;
   for (const role of ['midwife', 'hospital'] as const) {
     const hit = withPhone.find((c) => knownRole(c.role) === role);
     if (hit) return hit;

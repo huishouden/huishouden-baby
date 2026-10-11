@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react';
-import { Phone, Play, Square, Trash2 } from 'lucide-react';
+import { Pencil, Phone, Play, Square, Trash2 } from 'lucide-react';
 import { telHref } from '@huishouden/pwa-kit/places';
 import { formatDayLong, formatTime } from '@huishouden/pwa-kit/time';
 import { useClock } from '@huishouden/pwa-kit/react/clock';
-import { cardClass, iconButton, overline, secondaryButton } from '@huishouden/pwa-kit/react/ui';
+import { cardClass, iconButton, inputClass, overline, primaryButton, secondaryButton } from '@huishouden/pwa-kit/react/ui';
 import type { BabyStore } from '../data/types';
-import { clock, durationOf, intervalBefore, providerContact, running, sessions, summarize, type Status, type Trend } from '../lib/contractions';
+import { clock, durationOf, gestation, intervalBefore, parseNote, providerContact, running, sessions, summarize, type Status, type Trend } from '../lib/contractions';
 import type { Contraction } from '../lib/model';
 import { can } from '@huishouden/pwa-kit/roles';
 import { RoleNote } from '@huishouden/pwa-kit/react/roles';
 import { mayChange } from '../lib/roles';
+import { countdown } from '../lib/time';
+import { LIMITS } from '../lib/model';
 import { useT } from '../i18n';
 
 const STATUS_KEYS = {
@@ -17,6 +19,9 @@ const STATUS_KEYS = {
   few: 'contractions.status.few',
   irregular: 'contractions.status.irregular',
   building: 'contractions.status.building',
+  call: 'contractions.status.call',
+  preCall: 'contractions.status.preCall',
+  preKeep: 'contractions.status.preKeep',
   match: 'contractions.status.match',
 } as const satisfies Record<Status, string>;
 
@@ -52,7 +57,16 @@ export function Contractions({ store, notify }: Props) {
   }, [currentId, read]);
   const now = Math.max(slow, tick ?? 0);
 
-  const summary = summarize(contractions, now);
+  const { profile } = store.data;
+  const due = profile?.dueDate ? countdown(profile.dueDate, now) : null;
+  const weeks = due ? gestation(due.days) : null;
+  const preterm = weeks != null && weeks.weeks < 37;
+  const note = profile?.contractionNote;
+  const summary = summarize(contractions, now, { preterm, ...parseNote(note) });
+  const callNow = summary.status === 'call' || summary.status === 'preCall' || summary.status === 'match';
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState('');
+  const canEditNote = can(store.role, 'change-settings');
   const provider = providerContact(contacts);
   const history = sessions(contractions);
   const last = [...contractions].sort((a, b) => b.start - a.start).find((c) => c.id !== currentId);
@@ -74,11 +88,43 @@ export function Contractions({ store, notify }: Props) {
         {t('contractions.callNote')}
       </p>
 
+      <section className={`${cardClass} p-4`} aria-label={t('contractions.instructions')}>
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <p className={overline}>{t('contractions.instructions')}</p>
+            {weeks && <p className="mt-1 text-sm text-muted">{t('contractions.weeks', { weeks: weeks.weeks, days: weeks.days })}</p>}
+          </div>
+          {canEditNote && !editing && (
+            <button type="button" className={iconButton} aria-label={t('contractions.editInstructions')} onClick={() => { setDraft(note ?? ''); setEditing(true); }}>
+              <Pencil size={18} aria-hidden="true" />
+            </button>
+          )}
+        </div>
+        {editing ? (
+          <form
+            className="mt-2 space-y-2"
+            onSubmit={(e) => {
+              e.preventDefault();
+              store.actions.saveContractionNote(draft);
+              setEditing(false);
+            }}
+          >
+            <input className={inputClass} value={draft} maxLength={LIMITS.contractionNote} placeholder={t('contractions.instructionsPlaceholder')} aria-label={t('contractions.instructions')} onChange={(e) => setDraft(e.target.value)} />
+            <div className="flex gap-2">
+              <button type="submit" className={primaryButton}>{t('common.save')}</button>
+              <button type="button" className={secondaryButton} onClick={() => setEditing(false)}>{t('common.cancel')}</button>
+            </div>
+          </form>
+        ) : (
+          <p className="mt-1 text-lg text-ink [overflow-wrap:anywhere]" data-testid="instructions">{note || t('contractions.noInstructions')}</p>
+        )}
+      </section>
+
       <section className={`${cardClass} p-4 sm:p-6`} aria-label={t('contractions.title')}>
         <button
           type="button"
           onClick={toggle}
-          className={`flex min-h-40 w-full flex-col items-center justify-center gap-1 rounded-2xl px-4 py-6 text-3xl font-semibold transition-colors duration-150 ${current ? 'border-2 border-attention-fill bg-attention-tint text-attention' : 'bg-primary text-on-primary hover:bg-primary-hover'}`}
+          className={`flex min-h-40 w-full flex-col items-center justify-center gap-1 rounded-2xl px-4 py-6 text-3xl font-semibold transition-colors duration-150 ${current ? 'border-2 border-attention-fill bg-attention-tint text-ink' : 'bg-primary text-on-primary hover:bg-primary-hover'}`}
         >
           <span className="flex items-center gap-3">
             {current ? <Square size={32} aria-hidden="true" /> : <Play size={32} aria-hidden="true" />}
@@ -107,13 +153,17 @@ export function Contractions({ store, notify }: Props) {
           <Stat label={t('contractions.avgApart')} value={summary.avgInterval == null ? '–' : clock(summary.avgInterval)} />
         </dl>
         <p className="mt-3 text-base text-muted">{t(TREND_KEYS[summary.trend])}</p>
-        <p className="mt-2 text-lg font-medium text-ink" data-testid="status" data-status={summary.status}>
+        <p className={`mt-2 text-lg font-medium text-ink ${callNow ? 'rounded-xl border-2 border-attention-fill bg-attention-tint px-3 py-2' : ''}`} data-testid="status" data-status={summary.status}>
           {t(STATUS_KEYS[summary.status])}
         </p>
-        <p className="mt-1 text-sm text-muted">{t('contractions.guide')}</p>
+        {!preterm && <p className="mt-1 text-sm text-muted">{t('contractions.guide')}</p>}
         {provider?.phone && (
           <a className="mt-3 inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-line bg-surface px-4 text-lg font-semibold text-link" href={telHref(provider.phone)}>
-            <Phone size={20} aria-hidden="true" /> {t('contractions.call', { name: provider.name })}
+            <Phone size={20} aria-hidden="true" />
+            <span className="min-w-0 text-left">
+              <span className="block [overflow-wrap:anywhere]">{t('contractions.call', { name: provider.name })}</span>
+              <span className="block text-base font-medium tabular-nums">{provider.phone}</span>
+            </span>
           </a>
         )}
       </section>

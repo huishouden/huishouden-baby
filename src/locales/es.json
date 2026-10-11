@@ -271,7 +271,7 @@
   "contractions.title": "Contracciones",
   "contractions.overviewHint": "Cronométralas: inicio, fin y el patrón",
   "contractions.runningNow": "Se está cronometrando una contracción",
-  "contractions.callNote": "Llama a tu profesional de salud o a la unidad de parto de inmediato si se rompe la fuente, hay sangrado, menos movimientos, dolor intenso o contracciones regulares antes de las 37 semanas.",
+  "contractions.callNote": "Sigue primero las indicaciones de tu profesional de salud. Llámale o llama a la unidad de parto de inmediato si se rompe la fuente, hay sangrado, menos movimientos, dolor intenso o contracciones regulares antes de las 37 semanas.",
   "contractions.start": "Iniciar",
   "contractions.stop": "Parar",
   "contractions.cancel": "Toque por error: quitar esta",
@@ -302,5 +302,13 @@
   "contractions.first": "La primera de esta sesión",
   "contractions.apart": "{span} después de que empezó la anterior",
   "contractions.delete": "Eliminar la contracción de las {time}",
-  "contractions.deleted": "Contracción eliminada"
+  "contractions.deleted": "Contracción eliminada",
+  "contractions.instructions": "Nuestras indicaciones de la unidad de parto",
+  "contractions.noInstructions": "Aún no hay ninguna. Un administrador o miembro puede añadir lo que les dijeron, por ejemplo \"llamar si hay 6 en una hora\".",
+  "contractions.editInstructions": "Editar las indicaciones de la unidad de parto",
+  "contractions.instructionsPlaceholder": "Por ejemplo: llamar si hay 6 en una hora",
+  "contractions.weeks": "{weeks} semanas {days} días de embarazo",
+  "contractions.status.call": "Esto cumple las indicaciones que les dieron. Llama ya a la unidad de parto.",
+  "contractions.status.preCall": "Antes de las 37 semanas: contracciones regulares (unas 4 o más en una hora). Llama ya a la unidad de parto.",
+  "contractions.status.preKeep": "Sigue cronometrando. Llama a la unidad de parto ante cualquier duda."
 }

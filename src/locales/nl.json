@@ -271,7 +271,7 @@
   "contractions.title": "Weeën",
   "contractions.overviewHint": "Tijd ze: start, stop en zie het patroon",
   "contractions.runningNow": "Er wordt een wee getimed",
-  "contractions.callNote": "Bel direct je verloskundige of het ziekenhuis bij gebroken vliezen, bloedverlies, minder bewegingen, hevige pijn of regelmatige weeën voor 37 weken.",
+  "contractions.callNote": "Volg eerst de instructies van je zorgverlener. Bel direct je verloskundige of het ziekenhuis bij gebroken vliezen, bloedverlies, minder bewegingen, hevige pijn of regelmatige weeën voor 37 weken.",
   "contractions.start": "Start",
   "contractions.stop": "Stop",
   "contractions.cancel": "Per ongeluk getikt: deze verwijderen",
@@ -302,5 +302,13 @@
   "contractions.first": "Eerste van deze reeks",
   "contractions.apart": "{span} na het begin van de vorige",
   "contractions.delete": "Verwijder de wee van {time}",
-  "contractions.deleted": "Wee verwijderd"
+  "contractions.deleted": "Wee verwijderd",
+  "contractions.instructions": "Onze instructies van de verloskamer",
+  "contractions.noInstructions": "Nog geen. Een beheerder of lid kan toevoegen wat jullie is verteld, zoals \"bel bij 6 in een uur\".",
+  "contractions.editInstructions": "Instructies van de verloskamer bewerken",
+  "contractions.instructionsPlaceholder": "Bijvoorbeeld: bel bij 6 in een uur",
+  "contractions.weeks": "{weeks} weken {days} dagen zwanger",
+  "contractions.status.call": "Dit voldoet aan de instructies die jullie kregen. Bel nu de verloskamer.",
+  "contractions.status.preCall": "Voor 37 weken: regelmatige weeën (ongeveer 4 of meer in een uur). Bel nu de verloskamer.",
+  "contractions.status.preKeep": "Blijf timen. Bel de verloskamer bij elke zorg."
 }

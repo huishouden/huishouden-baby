@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import type { Contraction } from './model';
-import { clock, providerContact, running, sessions, summarize } from './contractions';
+import { clock, gestation, parseNote, providerContact, running, sessions, summarize } from './contractions';
 
 const MIN = 60_000;
 const NOW = 1_900_000_000_000;
@@ -98,4 +98,44 @@ describe('providerContact', () => {
     expect(providerContact([contact('Hosp', 'Hospital', '555'), contact('Mid', 'OB / midwife')])?.name).toBe('Hosp');
     expect(providerContact([contact('Ped', 'Pediatrician', '555')])).toBeUndefined();
   });
+});
+
+describe('before 37 weeks and the household’s note', () => {
+  const pre = { preterm: true };
+  test('four in the hour: call; fewer: keep timing; none: nothing', () => {
+    expect(summarize([c(40, 50), c(30, 50), c(20, 50), c(10, 50)], NOW, pre).status).toBe('preCall');
+    expect(summarize([c(30, 50), c(10, 50)], NOW, pre).status).toBe('preKeep');
+    expect(summarize([], NOW, pre).status).toBe('none');
+  });
+  test('never leads with 5-1-1 before 37 weeks', () => {
+    expect(summarize(steady(5, 58, 62), NOW, pre).status).toBe('preCall');
+  });
+  test('the note’s count wins, at term and before', () => {
+    const six = [50, 40, 30, 20, 10, 2].map((m) => c(m, 40));
+    expect(summarize(six, NOW, { noteCount: 6 }).status).toBe('call');
+    expect(summarize(six.slice(1), NOW, { noteCount: 6, preterm: true }).status).toBe('preCall');
+  });
+  test('the note’s spacing', () => {
+    expect(summarize([c(20, 40), c(14, 40), c(8, 40)], NOW, { noteMinutes: 7 }).status).toBe('call');
+    expect(summarize([c(30, 40), c(15, 40), c(0.5, 40)], NOW, { noteMinutes: 7 }).status).not.toBe('call');
+  });
+});
+
+test('parseNote', () => {
+  expect(parseNote('Call if 6 in an hour')).toEqual({ noteCount: 6 });
+  expect(parseNote('call L&D with 4 contractions per hour')).toEqual({ noteCount: 4 });
+  expect(parseNote('Call when 5 minutes apart')).toEqual({ noteMinutes: 5 });
+  expect(parseNote('every 7 min and 5 in an hour')).toEqual({ noteCount: 5, noteMinutes: 7 });
+  expect(parseNote('call for anything')).toEqual({});
+  expect(parseNote(undefined)).toEqual({});
+});
+
+test('gestation: 35 weeks 1 day is 118 days to the due date', () => {
+  expect(gestation(280 - (35 * 7 + 1))).toEqual({ weeks: 35, days: 1 });
+  expect(gestation(-30)).toBeNull();
+});
+
+test('providerContact prefers labor and delivery over the OB', () => {
+  const ct = (name: string, role: string) => ({ id: name, name, role, phone: '555', apps: ['baby'], createdAt: 1, by: 'a@example.com' });
+  expect(providerContact([ct('Mid', 'OB / midwife'), ct('Example OB — Labor & Delivery', 'Labor & delivery')])?.name).toContain('Labor');
 });

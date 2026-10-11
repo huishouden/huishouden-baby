@@ -9,6 +9,7 @@ export interface ProfileInput {
   name?: string;
   dueDate?: string;
   birthDate?: string;
+  contractionNote?: string;
 }
 
 export interface AppointmentInput {
@@ -27,6 +28,8 @@ export interface AppointmentInput {
 /** Writes return immediately (Firestore queues them offline); failures arrive through `onError`. */
 export interface BabyActions {
   saveProfile(p: ProfileInput): void;
+  /** The provider's instructions for the contraction timer; admins and members. */
+  saveContractionNote(note: string): void;
   logEvent(fields: Omit<EventFields, 'at'> & { at?: number }): BabyEvent;
   updateEvent(event: BabyEvent, fields: EventFields): void;
   deleteEvent(id: string): void;
