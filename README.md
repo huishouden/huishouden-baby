@@ -52,9 +52,10 @@ Each appointment also schedules two push reminders (`households/{householdId}/re
 every language so each device is notified in its own. "Remind me" in the appointment dialog is on
 by default; turning it off stores `remind: false` on the appointment, and the reminders go. Each
 reminder names the appointment as its `source`, so moving or deleting it cancels them unsent. A
-private appointment's reminders are private. They are rescheduled the moment an appointment is
-saved or deleted; a helper's or kid's device schedules them too, without the `source` (the kit
-lets only admins and members attach it), and an admin's or member's device adds it on its next sync. Each person turns on notifications per device, once
+private appointment's reminders are private. They are rescheduled the moment an appointment is saved or deleted. An admin's or member's device
+syncs all of them on open; a helper's or kid's device only replaces the reminders of the appointment
+it just saved or deleted, without the `source` (the kit lets only admins and members attach it), and
+never rewrites those scheduled for others. Each person turns on notifications per device, once
 for the whole suite, from the card under the appointments (`VITE_VAPID_PUBLIC_KEY`, the push key
 shared by the suite); "Mute appointment reminders for me" silences Baby for them alone.
 

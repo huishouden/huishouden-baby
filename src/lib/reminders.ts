@@ -15,6 +15,9 @@ const LEADS = [
 
 export const reminderRef = (id: string, key: (typeof LEADS)[number]['key']) => `appointment:${id}:${key}`;
 
+/** Every reminder ref an appointment can have, to clear them when it goes. */
+export const reminderRefs = (id: string) => LEADS.map((l) => reminderRef(id, l.key));
+
 /** Due while the appointment exists and is still at that time: deleting or moving it cancels the reminder unsent. */
 export const reminderSource = (a: Pick<Appointment, 'id' | 'at'>): ReminderSource => ({
   checks: [{ doc: `babyAppointments/${a.id}`, due: [{ field: 'at', in: [Math.round(a.at)] }] }],
