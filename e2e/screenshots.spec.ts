@@ -42,6 +42,7 @@ test('contacts', ({ page }) =>
   captureScreenshot(page, 'contacts', {
     fixedTime,
     prepare: async (p) => {
+      await p.getByRole('button', { name: /^More/ }).click();
       await p.getByRole('button', { name: 'Contacts', exact: true }).click();
       await expect(p.getByText('Example Pediatrics')).toBeVisible();
     },
@@ -88,8 +89,20 @@ test('phone: contacts', async ({ page }) => {
   await captureScreenshot(page, 'phone-contacts', {
     fixedTime,
     prepare: async (p) => {
+      await p.getByRole('button', { name: /^More/ }).click();
       await p.getByRole('button', { name: 'Contacts', exact: true }).click();
       await expect(p.getByText('Example Pediatrics')).toBeVisible();
+    },
+  });
+});
+
+test('phone: contraction timer', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await captureScreenshot(page, 'phone-contractions', {
+    fixedTime,
+    prepare: async (p) => {
+      await p.getByRole('button', { name: 'Timer', exact: true }).click();
+      await expect(p.getByTestId('status')).toBeVisible();
     },
   });
 });

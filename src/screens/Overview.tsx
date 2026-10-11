@@ -1,4 +1,4 @@
-import { Baby, CalendarPlus, ChevronRight, MapPin, Pencil } from 'lucide-react';
+import { Baby, CalendarPlus, Timer, ChevronRight, MapPin, Pencil } from 'lucide-react';
 import type { Appointment } from '../lib/model';
 import { groupChecklist, isOpen } from '../lib/checklist';
 import { formatDateLong, formatDayLong, formatTime, parseYmd, relativeDay } from '@huishouden/pwa-kit/time';
@@ -11,6 +11,7 @@ import { CompleteButton, CompletionList, CompletionRow, cardClass, ghostButton, 
 import { RoleNote } from '@huishouden/pwa-kit/react/roles';
 import { AddToCalendar } from '@huishouden/pwa-kit/react/calendar';
 import { dueDateEntry } from '../lib/agenda';
+import { running } from '../lib/contractions';
 import { useT } from '../i18n';
 
 interface Props {
@@ -20,12 +21,14 @@ interface Props {
   onBabyIsHere?: () => void;
   onAddAppointment: () => void;
   onEditAppointment: (a: Appointment) => void;
-  onOpen: (tab: 'appointments' | 'checklists') => void;
+  onOpen: (tab: 'appointments' | 'checklists' | 'contractions') => void;
+  /** Show the contraction timer entry (not for kids). */
+  contractions?: boolean;
   notify: (message: string, undo?: () => void) => void;
 }
 
 /** Before the birth: the countdown, the next appointment, and how far each checklist has come. */
-export function Overview({ store, onSetDueDate, onBabyIsHere, onAddAppointment, onEditAppointment, onOpen, notify }: Props) {
+export function Overview({ store, onSetDueDate, onBabyIsHere, onAddAppointment, onEditAppointment, onOpen, notify, contractions }: Props) {
   const t = useT();
   const { now } = useClock();
   const { profile, appointments, checklists } = store.data;
@@ -39,6 +42,22 @@ export function Overview({ store, onSetDueDate, onBabyIsHere, onAddAppointment, 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_420px]">
       <div className="flex min-h-0 flex-col gap-6">
+        {contractions && (
+          <section aria-label={t('contractions.title')}>
+            <button
+              type="button"
+              onClick={() => onOpen('contractions')}
+              className="flex min-h-20 w-full items-center gap-4 rounded-2xl bg-primary px-6 py-4 text-left text-on-primary transition-colors duration-150 hover:bg-primary-hover"
+            >
+              <Timer size={36} aria-hidden="true" className="shrink-0" />
+              <span className="min-w-0">
+                <span className="block text-2xl font-semibold">{t('contractions.title')}</span>
+                <span className="block text-base opacity-90">{running(store.data.contractions) ? t('contractions.runningNow') : t('contractions.overviewHint')}</span>
+              </span>
+              <ChevronRight size={24} aria-hidden="true" className="ml-auto shrink-0" />
+            </button>
+          </section>
+        )}
         <section className={`${cardClass} px-8 py-6`} aria-label={t('overview.countdown')}>
           <div className="flex items-start justify-between gap-4">
             <p className={overline}>{profile?.name ? t('overview.waitingFor', { name: profile.name }) : t('overview.countdown')}</p>

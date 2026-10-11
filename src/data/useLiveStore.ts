@@ -3,7 +3,7 @@ import { collection, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { commitOps, setDoc, writeBatch } from '@huishouden/pwa-kit/firestore';
 import { householdContacts, markUnflaggedOpen, watchContacts, type Contact } from '@huishouden/pwa-kit/contacts';
 import { can, isRestricted, type Role } from '@huishouden/pwa-kit/roles';
-import type { Appointment, BabyEvent, BabyProfile, ChecklistItem } from '../lib/model';
+import type { Appointment, BabyEvent, BabyProfile, ChecklistItem, Contraction } from '../lib/model';
 import { APP } from '../lib/contacts';
 import { defaultChecklistDocs } from '../lib/checklist';
 import { DAY } from '@huishouden/pwa-kit/time';
@@ -21,6 +21,9 @@ import { t } from '../i18n';
 
 /** How far back the log reads: enough for the day picker, small enough to stay fast. */
 const HISTORY_DAYS = 14;
+
+/** How far back the contraction history reads. */
+const CONTRACTION_DAYS = 30;
 
 /** The household agenda is a copy for the portal: a failed write there never interrupts Baby. */
 const publish = (p: Promise<unknown>) => void p.catch((e) => console.warn("Couldn't update the household agenda", e));
@@ -43,9 +46,10 @@ export function useLiveStore(householdId: string, me: string, members: string[],
   const [events, setEvents] = useState<BabyEvent[]>([]);
   const [checklists, setChecklists] = useState<ChecklistItem[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [contractions, setContractions] = useState<Contraction[]>([]);
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [answered, setAnswered] = useState({ profile: false, checklists: false });
-  const data: BabyData = { profile, events, checklists, appointments, contacts };
+  const data: BabyData = { profile, events, checklists, appointments, contractions, contacts };
   // The data as of the last render, for actions (an edit keeps its author; a new item goes last).
   const current = useRef(data);
   current.current = data;
@@ -117,10 +121,20 @@ export function useLiveStore(householdId: string, me: string, members: string[],
         },
         fail(() => t('error.loadAppointments')),
       ),
+      // Kids have no access to the contraction timer (the rules refuse the read).
+      ...(role == null || role === 'kid'
+        ? []
+        : [
+            onSnapshot(
+              query(collection(db, base, 'babyContractions'), where('start', '>=', Date.now() - CONTRACTION_DAYS * DAY)),
+              (s) => setContractions(s.docs.map((d) => ({ id: d.id, ...(d.data() as Omit<Contraction, 'id'>) }))),
+              fail(() => t('error.loadContractions')),
+            ),
+          ]),
       watchContacts(db, householdId, setContacts, { app: APP, restricted, backfillPositions: true, onError: fail(() => t('error.loadContacts')) }),
     ];
     return () => unsubs.forEach((u) => u());
-  }, [base, householdId, me, restricted]);
+  }, [base, householdId, me, restricted, role]);
 
   // Appointments saved before the private flag are hidden from helpers and kids until written with
   // `private: false`: an admin's or member's device does that once they have loaded.

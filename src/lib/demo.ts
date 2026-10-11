@@ -1,6 +1,6 @@
 import type { Contact } from '@huishouden/pwa-kit/contacts';
 import type { HouseholdHome } from '@huishouden/pwa-kit/home';
-import type { Appointment, BabyEvent, BabyProfile, ChecklistItem } from './model';
+import type { Appointment, BabyEvent, BabyProfile, ChecklistItem, Contraction } from './model';
 import { defaultChecklistDocs } from './checklist';
 import { toYmd } from '@huishouden/pwa-kit/time';
 import { t } from '../i18n';
@@ -21,6 +21,8 @@ export interface BabyData {
   events: BabyEvent[];
   checklists: ChecklistItem[];
   appointments: Appointment[];
+  /** The contraction timer's entries; empty for a kid, who has no access. */
+  contractions: Contraction[];
   /** The household's contacts shown in Baby. */
   contacts: Contact[];
 }
@@ -191,6 +193,18 @@ function checklists(after: boolean): ChecklistItem[] {
   return items;
 }
 
+/** Eight contractions in the hour before the demo's "now", getting closer and longer. */
+function sampleContractions(): Contraction[] {
+  const min = 60_000;
+  const gaps = [0, 9, 8, 7, 6.5, 6, 5.5, 5];
+  const lens = [42, 45, 48, 50, 55, 58, 60, 63];
+  let start = DEMO_NOW - 58 * min;
+  return gaps.map((g, i) => {
+    start += g * min;
+    return { id: `demo-contraction-${i + 1}`, start, end: start + lens[i] * 1000, by: i % 2 ? ALEX : SAM, createdAt: start };
+  });
+}
+
 export function demoData(scenario: DemoScenario): BabyData {
   const after = scenario === 'after';
   const profile: BabyProfile = after
@@ -201,6 +215,7 @@ export function demoData(scenario: DemoScenario): BabyData {
     events: after ? afterEvents() : [],
     checklists: checklists(after),
     appointments: appointments(after),
+    contractions: after ? [] : sampleContractions(),
     contacts: contacts(),
   };
 }

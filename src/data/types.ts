@@ -1,6 +1,6 @@
 import type { Contact, ContactInput } from '@huishouden/pwa-kit/contacts';
 import type { Role } from '@huishouden/pwa-kit/roles';
-import type { Appointment, BabyEvent, ChecklistItem, EventFields } from '../lib/model';
+import type { Appointment, BabyEvent, ChecklistItem, Contraction, EventFields } from '../lib/model';
 import type { BabyData } from '../lib/demo';
 
 export type { BabyData };
@@ -9,6 +9,7 @@ export interface ProfileInput {
   name?: string;
   dueDate?: string;
   birthDate?: string;
+  contractionNote?: string;
 }
 
 export interface AppointmentInput {
@@ -27,6 +28,8 @@ export interface AppointmentInput {
 /** Writes return immediately (Firestore queues them offline); failures arrive through `onError`. */
 export interface BabyActions {
   saveProfile(p: ProfileInput): void;
+  /** The provider's instructions for the contraction timer; admins and members. */
+  saveContractionNote(note: string): void;
   logEvent(fields: Omit<EventFields, 'at'> & { at?: number }): BabyEvent;
   updateEvent(event: BabyEvent, fields: EventFields): void;
   deleteEvent(id: string): void;
@@ -41,6 +44,12 @@ export interface BabyActions {
   saveAppointment(id: string | null, input: AppointmentInput): void;
   deleteAppointment(id: string): void;
   restoreAppointment(a: Appointment): void;
+  /** Starts timing a contraction now; returns its id. */
+  startContraction(): string;
+  /** Ends a running contraction now. */
+  stopContraction(id: string): void;
+  deleteContraction(id: string): void;
+  restoreContraction(c: Contraction): void;
   saveContact(id: string | null, input: ContactInput): void;
   deleteContact(id: string): void;
   /** Puts a deleted contact back under its old id, so appointments that point at it still do. */

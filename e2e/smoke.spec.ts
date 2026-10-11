@@ -47,7 +47,7 @@ test('sends the security headers and leaves sign-in un-framed', ({ request }) =>
 
 test('the Sample data banner is one line on a phone', ({ page }) => expectCompactSampleBanner(page, './'));
 
-test('on a phone the sections are a bottom bar', ({ page }) => expectBottomNav(page, { path: './', labels: ['Overview', 'Visits', 'Checklists', 'Contacts'] }));
+test('on a phone the sections are a bottom bar', ({ page }) => expectBottomNav(page, { path: './', labels: ['Overview', 'Timer', 'Visits', 'Checklists', 'More'] }));
 
 test('a sample checklist item is skipped and put back, counting neither as done nor as to do', async ({ page }) => {
   await expectCleanLoad(page, './#checklists');
@@ -91,3 +91,23 @@ test('done and not done read differently: an outlined Mark done, then a done row
 });
 
 test('follows the suite theme: dark on a dark device, readable', ({ page }) => expectThemeConsistent(page, { path: './' }));
+
+test('a kid has no contraction timer', async ({ page }) => {
+  await expectCleanLoad(page, './?as=kid');
+  await expect(page.getByRole('button', { name: /Contractions|Timer/ })).toHaveCount(0);
+});
+
+test('the contraction timer starts, stops and removes a mistaken tap', async ({ page }) => {
+  await expectCleanLoad(page);
+  await page.getByRole('button', { name: /Contractions/ }).first().click();
+  await expect(page.getByRole('note').filter({ hasText: 'Call your provider' })).toContainText('Call your provider or L&D right away');
+  await expect(page.getByTestId('status')).toBeVisible();
+  const before = await page.getByRole('button', { name: /^Delete the contraction/ }).count();
+  await page.getByRole('button', { name: /^Start/ }).click();
+  await expect(page.getByTestId('elapsed')).toBeVisible();
+  await page.getByRole('button', { name: /^Stop/ }).click();
+  await expect(page.getByRole('button', { name: /^Delete the contraction/ })).toHaveCount(before + 1);
+  await page.getByRole('button', { name: /^Start/ }).click();
+  await page.getByRole('button', { name: /Mistaken tap/ }).click();
+  await expect(page.getByRole('button', { name: /^Delete the contraction/ })).toHaveCount(before + 1);
+});
