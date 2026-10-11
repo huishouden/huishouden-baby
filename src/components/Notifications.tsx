@@ -46,10 +46,10 @@ export function DeviceNotifications({ live }: { live?: LiveNotifications }) {
       </div>
       <p className="mt-2 text-sm text-muted">{t('push.sampleNote')}</p>
       <div className="mt-3">
-        <Checkbox checked={sampleMuted} onChange={setSampleMuted}>
+        <Checkbox checked={sampleMuted} onChange={setSampleMuted} describedBy="mute-hint">
           {t('push.mute')}
         </Checkbox>
-        <p className="ml-9 text-sm text-muted">{t('push.muteHint')}</p>
+        <p id="mute-hint" className="ml-9 text-sm text-muted">{t('push.muteHint')}</p>
       </div>
     </section>
   );

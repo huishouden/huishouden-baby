@@ -27,6 +27,10 @@ describe('appointment reminders', () => {
     expect(reminderSource(visit).checks).toHaveLength(1);
   });
 
+  test('a helper or kid device attaches no source', () => {
+    expect(appointmentReminders([visit], profile, DEMO_NOW, URL, false).every((r) => r.source === undefined)).toBe(true);
+  });
+
   test('times already past are skipped', () => {
     const soon = { ...visit, at: DEMO_NOW + 5 * HOUR };
     expect(appointmentReminders([soon], profile, DEMO_NOW, URL).map((r) => r.ref)).toEqual(['appointment:v1:soon']);

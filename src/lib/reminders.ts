@@ -24,8 +24,9 @@ export const reminderSource = (a: Pick<Appointment, 'id' | 'at'>): ReminderSourc
  * The reminders for the appointments that haven't had theirs turned off (`remind: false`), each at
  * its time before the appointment and only when that time is still to come. Words in the current
  * language (wrap in `localizeReminders` for all of them). A private appointment's reminders are private.
+ * `withSource` is false on a helper's or kid's device: the kit lets only admins and members attach it.
  */
-export function appointmentReminders(appointments: Appointment[], profile: BabyProfile | null, now: number, url: string): ReminderInput[] {
+export function appointmentReminders(appointments: Appointment[], profile: BabyProfile | null, now: number, url: string, withSource = true): ReminderInput[] {
   const name = profile?.name?.trim() || '';
   const out: ReminderInput[] = [];
   for (const a of appointments) {
@@ -45,7 +46,7 @@ export function appointmentReminders(appointments: Appointment[], profile: BabyP
         recipients: 'all',
         ref: reminderRef(a.id, lead.key),
         private: a.private === true,
-        source: reminderSource(a),
+        ...(withSource ? { source: reminderSource(a) } : {}),
       });
     }
   }

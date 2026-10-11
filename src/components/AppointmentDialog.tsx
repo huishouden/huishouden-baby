@@ -133,10 +133,10 @@ export function AppointmentDialog({ appointment, now, contacts, calendarAvailabl
           <textarea className={`${inputClass} min-h-20`} maxLength={LIMITS.notes} value={notes} onChange={(e) => setNotes(e.target.value)} />
         </Field>
         <div>
-          <Checkbox checked={remind} onChange={setRemind}>
+          <Checkbox checked={remind} onChange={setRemind} describedBy="remind-hint">
             {t('appointmentDialog.remind')}
           </Checkbox>
-          <p className="ml-9 text-sm text-muted">
+          <p id="remind-hint" className="ml-9 text-sm text-muted">
             {t('appointmentDialog.remindHint')}
           </p>
         </div>
